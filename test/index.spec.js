@@ -239,6 +239,39 @@ describe('Redux Promise Middleware:', () => {
         })
       );
     });
+
+    it('allows global customisation of action.type separator', done => {
+      const SEPARATOR = '/';
+
+      const promiseAction = {
+        type: defaultPromiseAction.type,
+        payload: new Promise(resolve => resolve(promiseValue))
+      };
+
+      const pendingAction = {
+        type: `${defaultPromiseAction.type}${SEPARATOR}PENDING`
+      };
+
+      const fulfilledAction = {
+        ...defaultFulfilledAction,
+        type: `${defaultPromiseAction.type}${SEPARATOR}FULFILLED`
+      };
+
+      store = makeStore({ promiseTypeSeparator: SEPARATOR });
+      const actionDispatched = store.dispatch(promiseAction);
+
+      actionDispatched.then(
+        ({ value, action }) => {
+          expect(action).to.eql(fulfilledAction);
+          done();
+        },
+        () => {
+          expect(true).to.equal(false); // Expect this is not called
+        }
+      );
+
+      expect(lastMiddlewareModifies.spy).to.have.been.calledWith(pendingAction);
+    });
   });
 
   context('When promise is fulfilled:', () => {
